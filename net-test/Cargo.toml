@@ -1,0 +1,15 @@
+[package]
+name = "net-test"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+license.workspace = true
+
+[dependencies]
+
+anyhow = { workspace = true }
+candle-core = { path = "../candle-core" }
+candle-onnx = { path = "../candle-onnx" }
