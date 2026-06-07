@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
         &device,
     )?;
 
-    println!("\nInput x (uint8):");
+    println!("\nDequantize-linear -> input x (uint8):");
     println!("{:?}\n", x.to_vec2::<u8>()?);
 
     let mut inputs = HashMap::new();
@@ -46,7 +46,54 @@ fn main() -> anyhow::Result<()> {
 
     let result = candle_onnx::simple_eval(&model_dequantize, inputs)?;
     let y = result.get("y").expect("Output not found");
-    println!("Dequantized input: {:?}\n", y.to_vec2::<f32>()?);
+    println!("Dequantized-linear output: {:?}\n", y.to_vec2::<f32>()?);
+
+    let model_dequantize_axis = candle_onnx::read_file("dequant_per_axis.onnx")?;
+
+    let x = Tensor::from_vec(
+        vec![
+            3u8, 89, 34, 200, 74, 59, 5, 24, 24, 87, 32, 13, 245, 99, 4, 142, 121, 102,
+        ],
+        (1, 3, 3, 2),
+        &device,
+    )?;
+
+    println!("\nDequantize-per-axis -> input x (uint8):");
+    println!("{:?}\n", x.flatten_all()?.to_vec1::<u8>()?);
+
+    let mut inputs = HashMap::new();
+    inputs.insert("x".to_string(), x);
+
+    let result = candle_onnx::simple_eval(&model_dequantize_axis, inputs)?;
+    let y = result.get("y").expect("Output not found");
+    println!(
+        "Dequantized-per-axis output: {:?}\n",
+        y.flatten_all()?.to_vec1::<f32>()?
+    );
+
+    let model_dequantize_blocked = candle_onnx::read_file("dequant_blocked.onnx")?;
+
+    let x = Tensor::from_vec(
+        vec![
+            3u8, 89, 34, 200, 74, 59, 5, 24, 24, 87, 32, 13, 5, 12, 12, 33, 65, 42, 245, 99, 4,
+            142, 121, 102,
+        ],
+        (1, 4, 3, 2),
+        &device,
+    )?;
+
+    println!("\nDequantize-blocked -> input x (uint8):");
+    println!("{:?}\n", x.flatten_all()?.to_vec1::<u8>()?);
+
+    let mut inputs = HashMap::new();
+    inputs.insert("x".to_string(), x);
+
+    let result = candle_onnx::simple_eval(&model_dequantize_blocked, inputs)?;
+    let y = result.get("y").expect("Output not found");
+    println!(
+        "Dequantized-blocked output: {:?}\n",
+        y.flatten_all()?.to_vec1::<f32>()?
+    );
 
     Ok(())
 }
